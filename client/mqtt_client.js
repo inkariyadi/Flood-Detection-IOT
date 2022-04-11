@@ -25,22 +25,32 @@ client.subscribe('waterHeightDetectorEFSS', () => {
 // Session Config
 let sessionStart = false;
 let sessionId;
-let resetSession;
+let resetSensorTimer, resetSession;
 
+// Master Sensor Detection Timer
+const sensorTimer = () => {
+    console.log("Start sensor timer");
+    resetSensorTimer = setTimeout(resetSessionVariables, 60000)
+}
+
+// 30 Minutes Timer
 const sessionTimer = () => {
-    console.log("Timer mulai");
-    resetSession = setTimeout(
-        () => {
-          console.log("End of session");
-          sessionStart = false;
-          sessionId = null;
+    console.log("Start session timer");
+    resetSession = setTimeout(resetSessionVariables, 1800000)
+}
 
-          // Unsubscribe to sensor topics except the main sensor
-          client.unsubscribe('alertActuatorEFSS');
-          client.unsubscribe('waterHeightAlertEFSS');
-          client.unsubscribe('raindropSensorEFSS');
+const resetSessionVariables = () => {
+    console.log("End of session");
+    sessionStart = false;
+    sessionId = null;
 
-      }, 100000)
+    // Unsubscribe to sensor topics except the main sensor
+    client.unsubscribe('alertActuatorEFSS');
+    client.unsubscribe('waterHeightAlertEFSS');
+    client.unsubscribe('raindropSensorEFSS');
+
+    clearTimeout(resetSensorTimer);
+    clearTimeout(resetSession);
 }
 
 /*********************  MAIN FUNCTIONS OF CLIENT **********************/
@@ -52,6 +62,7 @@ client.on('connect', () => {
         // Session Start
         if((topic == 'waterHeightDetectorEFSS') && (!sessionStart)){
             console.log("Initiate Session");
+            sensorTimer()
             sessionTimer()
 
             let session = new SessionData({
@@ -66,18 +77,17 @@ client.on('connect', () => {
 
             session.save();
 
-            // TODO: Create MongoDB Session Instance
             sessionId = session.start_time;
             sessionStart = true;
         }
 
         // Receive Data
         if(sessionStart) {
-            console.log("Receive Data");
+            console.log("Receive Data from ", topic, "with data", JSON.parse(message.toString()));
 
             if(topic == "waterHeightDetectorEFSS"){
-                clearTimeout(resetSession);
-                sessionTimer();
+                clearTimeout(resetSensorTimer);
+                sensorTimer();
             }
             collectSessionData(topic, message, packet, sessionId);
         }
@@ -85,7 +95,7 @@ client.on('connect', () => {
 
 })
 
-const collectSessionData = (topic, message, packet, sessionId) => {
+const collectSessionData = async (topic, message, packet, sessionId) => {
     let json_data = JSON.parse(message.toString());
 
     let data = {
@@ -98,29 +108,23 @@ const collectSessionData = (topic, message, packet, sessionId) => {
         timestamp: new Date().toISOString(),
         data: data[topic]
     })
-
-    console.log('Received Session Id:', sessionId);
-    console.log('Sensor Data', sensor_data);
     
+    let updated_session;
+
     if(topic == "waterHeightDetectorEFSS"){
-        SessionData.findOneAndUpdate(
+        updated_session = await SessionData.findOneAndUpdate(
             {start_time: sessionId}, {$push: {sensor_waterlevel_bawah: sensor_data}}, {new: true}
-        ).then((result) => {
-            console.log(result);
-        });
+        )
     } else if(topic == "waterHeightAlertEFSS"){
-        SessionData.findOneAndUpdate(
+        updated_session = await SessionData.findOneAndUpdate(
             {start_time: sessionId}, {$push: {sensor_waterlevel_atas: sensor_data}}, {new: true}
-        ).then((result) => {
-            console.log(result);
-        });
+        )
     } else if (topic == "raindropSensorEFSS"){
-        SessionData.findOneAndUpdate(
+        updated_session = await SessionData.findOneAndUpdate(
             {start_time: sessionId}, {$push: {sensor_raindrop: sensor_data}}, {new: true}
-        ).then((result) => {
-            console.log(result);
-        });
+        )
     }
+
 }
 
 export const HelloWorld = async (req, res) => {
