@@ -1,0 +1,23 @@
+.green-box {
+  margin: 2em 10em 1em;
+  background-color: #82ca9d !important; 
+  padding-left: 1em;
+  padding-right: 1em;
+  
+}
+
+.yellow-box {
+  margin: 2em 10em 1em;
+  background-color: #d2d49b !important; 
+  padding-left: 1em;
+  padding-right: 1em;
+  
+}
+
+.blue-box {
+  margin: 2em 10em 1em;
+  background-color: #9fd0fc !important; 
+  padding-left: 1em;
+  padding-right: 1em;
+  
+}
