@@ -11,60 +11,41 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import WaterIcon from '@mui/icons-material/Water';
 import CloudIcon from '@mui/icons-material/Cloud';
+import Button from '@mui/material/Button';
 import axios from 'axios';
+import moment from 'moment';
 import "./charts.css";
 
-const data = [
-  {
-    name: 'Page A',
-    upperWaterLevel: 4000,
-    amt: 2400,
-  },
-  {
-    name: 'Page B',
-    upperWaterLevel: 3000,
-    amt: 2210,
-  },
-  {
-    name: 'Page C',
-    upperWaterLevel: 2000,
-    amt: 2290,
-  },
-  {
-    name: 'Page D',
-    upperWaterLevel: 2780,
-    amt: 2000,
-  },
-  {
-    name: 'Page E',
-    upperWaterLevel: 1890,
-    amt: 2181,
-  },
-  {
-    name: 'Page F',
-    upperWaterLevel: 2390,
-    amt: 2500,
-  },
-  {
-    name: 'Page G',
-    upperWaterLevel: 3490,
-    amt: 2100,
-  },
-];
-
-
+const preprocessSensorData = (data) => {
+  return data.map((value)=> ({
+    time: moment(value.timestamp).format("hh:mm:ss"),
+    amount: value.data,
+  }))
+}
 
 const Chart = () => {
   const [date, setDate] = useState(new Date());
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date());
+  const [upperLevelData, setUpperLevelData] = useState();
+  const [lowerLevelData, setLowerLevelData] = useState();
+  const [raindropData, setRaindropData] = useState();
+  
+  const fetchData = () => {
+    axios.get(`http://localhost:5000/api/getdata?picked_date=${moment(date).format("DD/MM/yy")}&start_time=${moment(startTime).format("hh:mm")}&end_time=${moment(endTime).format("hh:mm")}`)
+      .then(res => {
+        const sensors = res.data;
+        const upperlevel = sensors["sensor_waterlevel_atas"];
+        const raindrop = sensors["sensor_raindrop"];
+        const lowerlevel = sensors["sensor_waterlevel_bawah"];
+        setUpperLevelData(preprocessSensorData(upperlevel));
+        setRaindropData(preprocessSensorData(raindrop));
+        setLowerLevelData(preprocessSensorData(lowerlevel));
+      })
+  }
   
   useEffect(()=> {
-    axios.get(`https://jsonplaceholder.typicode.com/users`)
-      .then(res => {
-        const persons = res.data;
-        console.log(persons);
-      })
+    fetchData();
   },[]);
   
   const handleChange = (newValue) => {
@@ -74,8 +55,8 @@ const Chart = () => {
     <>
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box sx={{ m: 2, p: 2, width: 600 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={4}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={5}>
             <DesktopDatePicker
                 label="Date"
                 inputFormat="MM/dd/yyyy"
@@ -84,7 +65,7 @@ const Chart = () => {
                 renderInput={(params) => <TextField {...params} />}
             />
           </Grid>
-          <Grid item xs={4}>
+          <Grid item xs={3}>
             <TimePicker
               label="Start Time"
               value={startTime}
@@ -93,7 +74,7 @@ const Chart = () => {
               renderInput={(params) => <TextField {...params} />}
             />
           </Grid>
-          <Grid item xs={4}>
+          <Grid item xs={3}>
             <TimePicker
               label="End Time"
               value={endTime}
@@ -101,6 +82,11 @@ const Chart = () => {
               ampm={false}
               renderInput={(params) => <TextField {...params} />}
             />
+          </Grid>
+          <Grid item xs={1}>
+            <Button variant="outlined" size="large" onClick={fetchData}>
+                Search
+            </Button>
           </Grid>
         </Grid>
       </Box>
@@ -117,7 +103,7 @@ const Chart = () => {
             <Grid item xs={8}>
               <Box display="flex" justifyContent="flex-end">
                 <Typography variant="h4" component="div" gutterBottom>
-                  {data[data.length - 1].amt} cm
+                  {upperLevelData && upperLevelData.length > 0 && upperLevelData[upperLevelData.length - 1].amount} cm
                 </Typography>
               </Box>
               <Box display="flex" justifyContent="flex-end">
@@ -140,7 +126,7 @@ const Chart = () => {
             <Grid item xs={8}>
               <Box display="flex" justifyContent="flex-end">
                 <Typography variant="h4" component="div" gutterBottom>
-                  {data[data.length - 1].amt} ml/s
+                {raindropData && raindropData.length > 0 && raindropData[raindropData.length - 1].amount} ml/s
                 </Typography>
               </Box>
               <Box display="flex" justifyContent="flex-end">
@@ -163,7 +149,7 @@ const Chart = () => {
             <Grid item xs={8}>
               <Box display="flex" justifyContent="flex-end">
                 <Typography variant="h4" component="div" gutterBottom>
-                  {data[data.length - 1].amt} cm
+                {lowerLevelData && lowerLevelData.length > 0 && lowerLevelData[lowerLevelData.length - 1].amount} cm
                 </Typography>
               </Box>
               <Box display="flex" justifyContent="flex-end">
@@ -186,7 +172,7 @@ const Chart = () => {
         <AreaChart
           width={650}
           height={400}
-          data={data}
+          data={upperLevelData}
           margin={{
             top: 5,
             right: 30,
@@ -201,11 +187,11 @@ const Chart = () => {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
+          <XAxis dataKey="time" />
           <YAxis />
           <Tooltip cursor={{ stroke: "#82ca9d", strokeWidth: 3 }} labelStyle={{ color:'black', fontWeight: 'bold'}} itemStyle={{color:'black'}}/>
           <Legend />
-          <Area type="monotone" dataKey="upperWaterLevel" stroke="#82ca9d" fillOpacity={1} fill="url(#color1)"/>
+          <Area type="monotone" dataKey="amount" stroke="#82ca9d" fillOpacity={1} fill="url(#color1)"/>
         </AreaChart>
       </Grid>
       <Grid item xs={4}>
@@ -215,7 +201,7 @@ const Chart = () => {
         <AreaChart
           width={650}
           height={400}
-          data={data}
+          data={raindropData}
           margin={{
             top: 5,
             right: 30,
@@ -230,11 +216,11 @@ const Chart = () => {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
+          <XAxis dataKey="time" />
           <YAxis />
           <Tooltip cursor={{ stroke: "#fdfece", strokeWidth: 3 }} labelStyle={{ color:'black', fontWeight: 'bold'}} itemStyle={{color:'black'}} />
           <Legend />
-          <Area type="monotone" dataKey="upperWaterLevel" stroke="#fdfece" fillOpacity={1} fill="url(#color2)" />
+          <Area type="monotone" dataKey="amount" stroke="#fdfece" fillOpacity={1} fill="url(#color2)" />
         </AreaChart>
       </Grid>
       <Grid item xs={4}>
@@ -244,7 +230,7 @@ const Chart = () => {
         <AreaChart
           width={650}
           height={400}
-          data={data}
+          data={lowerLevelData}
           margin={{
             top: 5,
             right: 30,
@@ -259,11 +245,11 @@ const Chart = () => {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
+          <XAxis dataKey="time" />
           <YAxis />
           <Tooltip cursor={{ stroke: "#c3e0fa", strokeWidth: 3 }} labelStyle={{ color:'black', fontWeight: 'bold'}} itemStyle={{color:'black'}} />
           <Legend />
-          <Area type="monotone" dataKey="upperWaterLevel" stroke="#c3e0fa" fillOpacity={1} fill="url(#color3)" />
+          <Area type="monotone" dataKey="amount" stroke="#c3e0fa" fillOpacity={1} fill="url(#color3)" />
         </AreaChart>
       </Grid>
     </Grid>
