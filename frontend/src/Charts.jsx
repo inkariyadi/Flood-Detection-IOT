@@ -1,9 +1,9 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
-import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
@@ -11,8 +11,8 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import WaterIcon from '@mui/icons-material/Water';
 import CloudIcon from '@mui/icons-material/Cloud';
+import axios from 'axios';
 import "./charts.css";
-
 
 const data = [
   {
@@ -52,22 +52,34 @@ const data = [
   },
 ];
 
-const Chart = () => {
-  const [value, setValue] = useState(new Date());
 
+
+const Chart = () => {
+  const [date, setDate] = useState(new Date());
+  const [startTime, setStartTime] = useState(new Date());
+  const [endTime, setEndTime] = useState(new Date());
+  
+  useEffect(()=> {
+    axios.get(`https://jsonplaceholder.typicode.com/users`)
+      .then(res => {
+        const persons = res.data;
+        console.log(persons);
+      })
+  },[]);
+  
   const handleChange = (newValue) => {
-    setValue(newValue);
+    setDate(newValue);
   };
   return (
     <>
-    <LocalizationProvider dateAdapter={AdapterMoment}>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box sx={{ m: 2, p: 2, width: 600 }}>
         <Grid container spacing={2}>
           <Grid item xs={4}>
             <DesktopDatePicker
                 label="Date"
-                inputFormat="MM/DD/yyyy"
-                value={value}
+                inputFormat="MM/dd/yyyy"
+                value={date}
                 onChange={handleChange}
                 renderInput={(params) => <TextField {...params} />}
             />
@@ -75,8 +87,8 @@ const Chart = () => {
           <Grid item xs={4}>
             <TimePicker
               label="Start Time"
-              value={value}
-              onChange={handleChange}
+              value={startTime}
+              onChange={(value) => {setStartTime(value)}}
               ampm={false}
               renderInput={(params) => <TextField {...params} />}
             />
@@ -84,8 +96,8 @@ const Chart = () => {
           <Grid item xs={4}>
             <TimePicker
               label="End Time"
-              value={value}
-              onChange={handleChange}
+              value={endTime}
+              onChange={(value) => {setEndTime(value)}}
               ampm={false}
               renderInput={(params) => <TextField {...params} />}
             />
@@ -105,7 +117,7 @@ const Chart = () => {
             <Grid item xs={8}>
               <Box display="flex" justifyContent="flex-end">
                 <Typography variant="h4" component="div" gutterBottom>
-                  1 cm
+                  {data[data.length - 1].amt} cm
                 </Typography>
               </Box>
               <Box display="flex" justifyContent="flex-end">
@@ -128,7 +140,7 @@ const Chart = () => {
             <Grid item xs={8}>
               <Box display="flex" justifyContent="flex-end">
                 <Typography variant="h4" component="div" gutterBottom>
-                  3 ml/s
+                  {data[data.length - 1].amt} ml/s
                 </Typography>
               </Box>
               <Box display="flex" justifyContent="flex-end">
@@ -151,7 +163,7 @@ const Chart = () => {
             <Grid item xs={8}>
               <Box display="flex" justifyContent="flex-end">
                 <Typography variant="h4" component="div" gutterBottom>
-                  1 cm
+                  {data[data.length - 1].amt} cm
                 </Typography>
               </Box>
               <Box display="flex" justifyContent="flex-end">
