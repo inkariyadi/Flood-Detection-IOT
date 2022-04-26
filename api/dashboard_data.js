@@ -1,5 +1,4 @@
 import { SessionData } from "../client/session_data_model.js";
-import mongoose from 'mongoose';
 
 const ParseStartEndEarliestDate = (picked_date, start_time, end_time) => {
     const [date, month, year] = picked_date.split("/")

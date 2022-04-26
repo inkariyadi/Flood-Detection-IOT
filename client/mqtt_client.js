@@ -25,18 +25,12 @@ client.subscribe('waterHeightDetectorEFSS', () => {
 // Session Config
 let sessionStart = false;
 let sessionId;
-let resetSensorTimer, resetSession;
+let resetSensorTimer;
 
 // Master Sensor Detection Timer
 const sensorTimer = () => {
     console.log("Start sensor timer");
     resetSensorTimer = setTimeout(resetSessionVariables, 60000)
-}
-
-// 30 Minutes Timer
-const sessionTimer = () => {
-    console.log("Start session timer");
-    resetSession = setTimeout(resetSessionVariables, 1800000)
 }
 
 const resetSessionVariables = () => {
@@ -50,7 +44,6 @@ const resetSessionVariables = () => {
     client.unsubscribe('raindropSensorEFSS');
 
     clearTimeout(resetSensorTimer);
-    clearTimeout(resetSession);
 }
 
 /*********************  MAIN FUNCTIONS OF CLIENT **********************/
@@ -63,7 +56,6 @@ client.on('connect', () => {
         if((topic == 'waterHeightDetectorEFSS') && (!sessionStart)){
             console.log("Initiate Session");
             sensorTimer()
-            sessionTimer()
 
             let session = new SessionData({
                 start_time: new Date().toISOString()
