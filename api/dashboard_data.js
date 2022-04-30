@@ -1,4 +1,6 @@
+import { client, SENSOR_TIMEOUT, sessionStart } from "../client/mqtt_client.js";
 import { SessionData } from "../client/session_data_model.js";
+import { SensorData } from '../client/sensor_data_model.js';
 
 const ParseStartEndEarliestDate = (picked_date, start_time, end_time) => {
     const [date, month, year] = picked_date.split("/")
@@ -12,6 +14,75 @@ const ParseStartEndEarliestDate = (picked_date, start_time, end_time) => {
     return { start_date, end_date, earliest_date }
 }
 
+// Live Data
+export let live_sensor_waterlevel_bawah = []
+export let live_sensor_waterlevel_atas = []
+export let live_sensor_raindrop = []
+
+let resetSensorTimer;
+
+const sensorTimer = () => {
+    resetSensorTimer = setTimeout(resetLiveSession, SENSOR_TIMEOUT)
+}
+
+const resetLiveSession = () => {
+    console.log("End Live Session")
+    for (var i = 0; i < 10; i++) {
+        setTimeout(() => {
+            if(live_sensor_waterlevel_bawah) live_sensor_waterlevel_bawah.shift()
+            if(live_sensor_waterlevel_atas) live_sensor_waterlevel_atas.shift()
+            if(live_sensor_raindrop) live_sensor_raindrop.shift()
+        }, 3000 * i);
+    }
+}
+
+const insert_live_data = (array, data) => {
+    if(array.length == 10){
+        array.shift()
+    }
+
+    array.push(data)
+}
+
+export const GetRealTimeData = async(req, res) => {
+    if(!sessionStart){
+        return res.status(200).send({
+            "message": "There are no live session"
+        })
+    } else {
+        console.log("Live session started");
+
+        client.on('message', (topic, message, packet) => {
+            if(topic == "waterHeightDetectorEFSS"){
+                clearTimeout(resetSensorTimer);
+                sensorTimer();
+            }
+
+            let json_data = JSON.parse(message.toString());
+            let data = {
+                "waterHeightDetectorEFSS": json_data.water_level,
+                "waterHeightAlertEFSS": json_data.water_level,
+                "raindropSensorEFSS": json_data.rain_intensity
+                // TODO: Define for alertActuatorEFSS
+            }
+
+            let sensor_data = new SensorData({
+                timestamp: new Date().toISOString(),
+                data: data[topic]
+            })
+
+            // Insert Data
+            if (topic == "waterHeightDetectorEFSS") insert_live_data(live_sensor_waterlevel_bawah, sensor_data)        
+            else if (topic == "waterHeightAlertEFSS") insert_live_data(live_sensor_waterlevel_atas, sensor_data)
+            else if (topic == "raindropSensorEFSS") insert_live_data(live_sensor_raindrop, sensor_data)
+        })
+
+        return res.status(200).send("Successfully connected to live session")
+    }
+    // client.on('message', (topic, message, packet) => {
+
+    // })
+}
 export const GetDashboardData = async (req, res) => {
     const { picked_date, start_time, end_time } = req.query
 

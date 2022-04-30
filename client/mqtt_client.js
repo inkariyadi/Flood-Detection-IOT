@@ -2,6 +2,8 @@ import mqtt from 'mqtt';
 import { SensorData } from './sensor_data_model.js';
 import { SessionData } from './session_data_model.js';
 
+export const SENSOR_TIMEOUT = 30000;
+
 // Client Config
 const host = '202.148.1.57'
 const port = '1883'
@@ -10,7 +12,7 @@ const clientId = "subscriber-nodejs";
 const username = 'app-Esp32ElectricalFloodSafetySystem'
 const password = '0r2p9o9ttu7YpwLYiKXwJIb9SLjwKF'
 
-const client  = mqtt.connect(connectUrl, {
+export const client  = mqtt.connect(connectUrl, {
     clientId,
     connectTimeout: 4000,
     username: username,
@@ -23,14 +25,14 @@ client.subscribe('waterHeightDetectorEFSS', () => {
 });
 
 // Session Config
-let sessionStart = false;
+export let sessionStart = false;
 let sessionId;
 let resetSensorTimer;
 
 // Master Sensor Detection Timer
 const sensorTimer = () => {
     console.log("Start sensor timer");
-    resetSensorTimer = setTimeout(resetSessionVariables, 60000)
+    resetSensorTimer = setTimeout(resetSessionVariables, SENSOR_TIMEOUT)
 }
 
 const resetSessionVariables = () => {
