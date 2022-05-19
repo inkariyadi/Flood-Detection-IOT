@@ -2,7 +2,7 @@ import mqtt from 'mqtt';
 import { SensorData } from './sensor_data_model.js';
 import { SessionData } from './session_data_model.js';
 
-export const SENSOR_TIMEOUT = 30000;
+export const SENSOR_TIMEOUT = 60000;
 
 // Client Config
 const host = '202.148.1.57'
