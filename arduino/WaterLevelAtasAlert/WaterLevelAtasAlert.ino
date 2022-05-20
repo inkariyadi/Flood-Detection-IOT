@@ -42,9 +42,12 @@ volatile byte ledState = LOW;
 // SENSOR
 #define waterLevel 35
 #define ledPin 2
+#define SENSOR_MIN 0
+#define SENSOR_MAX 4095
 
 // VARIABLES
 int val = 0;
+int val_calibrated;
 bool flood = false;
 bool state = false;
 
@@ -113,7 +116,8 @@ void loop() {
 
   // Sent Water Level Data when Water Detected
   if(waterLevelDetected > 0){
-    sprintf(payload, "{\"water_level\": %d, \"timestamp\": %s}", waterLevelDetected, formattedTime);
+    val_calibrated = map(waterLevelDetected, SENSOR_MIN, SENSOR_MAX, 0, 40);
+    sprintf(payload, "{\"water_level\": %d, \"timestamp\": %s}", val_calibrated, formattedTime);
     Serial.println(payload);
     
     client.publish(DEVICE, payload);
