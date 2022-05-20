@@ -27,7 +27,7 @@ const char* BROKER_SERVER = "202.148.1.57";
 const int BROKER_PORT = 1883;
 
 // 4. DEVICE
-const char* DEVICE = "waterHeightAlertEFSS";
+const char* DEVICE = "waterHeightDetectorEFSS";
 const char* DEVICE_RAINDROP = "raindropSensorEFSS";
 const char* ALERT = "alertActuatorEFSS";
 
