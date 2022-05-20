@@ -15,8 +15,8 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, NTP_ADDRESS, NTP_OFFSET, NTP_INTERVAL);
 
 // 1. WIFI CONFIG
-const char* SSID = "Tselhome-2002D";
-const char* SSID_PASSWORD = "RatuTayaInka999";
+const char* SSID = "Inkkkkkkkkkk";
+const char* SSID_PASSWORD = "xxxxxxxx";
 
 // 2. MQTT CLIENT CONFIG
 char CLIENT[]= "app-Esp32ElectricalFloodSafetySystem";
@@ -172,7 +172,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect("waterHeightDetector", CLIENT, CLIENT_PASSWORD)) {
+    if (client.connect("waterHeightAlert", CLIENT, CLIENT_PASSWORD)) {
       Serial.println("connected");
     } else {
       Serial.print("failed, rc=");
