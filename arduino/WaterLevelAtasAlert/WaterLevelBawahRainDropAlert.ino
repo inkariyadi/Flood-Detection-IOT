@@ -45,10 +45,15 @@ volatile byte ledState = LOW;
 #define ledPin 2
 #define rainAnalog 35
 #define rainDigital 34
+#define SENSOR_MIN 0
+#define SENSOR_MAX 4095
+
 
 // VARIABLES
 int val = 0;
+int val_calibrated = 0;
 int raindrop_val = 0;
+int raindrop_val_calibrated = 0;
 bool flood = false;
 bool state = false;
 
@@ -120,15 +125,17 @@ void loop() {
 
   // Sent Water Level Data when Water Detected
   if(waterLevelDetected > 0){
-    sprintf(payload, "{\"water_level\": %d, \"timestamp\": %s}", waterLevelDetected, formattedTime);
+    val_calibrated = map(waterLevelDetected, SENSOR_MIN, SENSOR_MAX, 0, 40);
+    sprintf(payload, "{\"water_level\": %d, \"timestamp\": %s}", val_calibrated, formattedTime);
     Serial.println(payload);
     
     client.publish(DEVICE, payload);
   }
   
   // Sent Rain Drop Data when Water Detected
-  if(rainDropDetected > 0){
-    sprintf(payload, "{\"rain_drop\": %d, \"timestamp\": %s}", rainDropDetected, formattedTime);
+  if(rainDropDetected < 2048){
+    raindrop_val_calibrated = map(rainDropDetected, SENSOR_MIN, SENSOR_MAX, 1, 0);
+    sprintf(payload, "{\"rain_drop\": %d, \"timestamp\": %s}", raindrop_val_calibrated, formattedTime);
     Serial.println(payload);
     
     client.publish(DEVICE_RAINDROP, payload);
@@ -149,7 +156,7 @@ int readWaterLevelSensor() {
 int readRainDropSensor() {
   raindrop_val = analogRead(rainAnalog);
   delay(10);
-  return 
+  return raindrop_val;
 }
 
 void setupWifi() {
