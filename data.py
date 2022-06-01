@@ -38,13 +38,13 @@ if(len(wf_atas)>0):
 from sklearn.cluster import KMeans
 import numpy as np
 # data dummy berisi array [a,b] dimana nilai a merupakan rata2 raindrop
-# nilai b merupakan kategori lama air naik {0-> diatas 1hr ; 1 -> 30min-1hr ; 2 -> dibawah 30min}
-X = np.array([[10, 0], [150, 2], [80, 1],[82, 1], [85, 1], [40, 0], [160, 2], [155, 2]])
+# nilai b merupakan kategori lama air naik {0-> tidak naik ; 1-> diatas 1hr ; 2 -> 30min-1hr ; 3 -> dibawah 30min}
+X = np.array([[10, 0], [150, 2], [80, 1],[82, 1], [85, 1], [40, 0], [160, 2], [155, 2], [247,3], [300,3]])
 kmeans = KMeans(n_clusters=3, random_state=0).fit(X)
 print(kmeans.labels_)
 # jika ingin memprediksi, nilai pertama merupakan nilai rata-rata raindrop hingga saat ini
 # nilai kedua selalu diisi 0
-print(kmeans.predict([[27, 0], [170, 0]]))
+print(kmeans.predict([[27, 0], [170, 0], [286, 0]]))
 
 
 
